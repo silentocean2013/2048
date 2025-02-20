@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>2048 Game</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="welcome-container">
+        <div class="welcome-content animate__animated animate__fadeIn">
+            <h1>Welcome to 2048</h1>
+            <div class="name-input-container">
+                <input type="text" id="player-name" placeholder="Enter your name" minlength="3" maxlength="20">
+                <p class="name-validation">Name must be at least 3 characters long</p>
+                <button id="start-game" disabled>Start Game</button>
+            </div>
+            <div class="hall-of-fame welcome-hall">
+                <div class="trophy-icon">👑</div>
+                <h2>Hall of Fame</h2>
+                <div class="podium">
+                    <ul class="high-scores" id="welcome-high-scores">
+                        <!-- High scores will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="container" style="display: none;">
+        <div class="game-header">
+            <div class="player-info">
+                <div class="player-name-display">
+                    <span class="player-label">Player:</span>
+                    <span id="current-player"></span>
+                </div>
+                <div class="score-container">
+                    <div class="score">Score: <span id="score">0</span></div>
+                    <div class="high-score">Best: <span id="best-score">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="grid-container">
+                <!-- Game grid will be generated here -->
+            </div>
+            <button id="quit">Quit</button>
+        </div>
+    </div>
+
+    <!-- Game Over Dialog -->
+    <div class="dialog-overlay" id="gameOverDialog">
+        <div class="dialog">
+            <h2 id="dialogTitle">Game Over!</h2>
+            <p id="dialogScore">Score: <span>0</span></p>
+            <p id="dialogMessage"></p>
+            <div class="hall-of-fame dialog-hall">
+                <div class="trophy-icon">👑</div>
+                <h2>Hall of Fame</h2>
+                <div class="podium">
+                    <ul class="high-scores" id="dialog-high-scores">
+                        <!-- High scores will be populated here -->
+                    </ul>
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button id="playAgain">Play Again</button>
+                <button id="dialogQuit">Quit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
