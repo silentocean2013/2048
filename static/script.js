@@ -24,6 +24,7 @@ let grid = [];
 let playerName = '';
 let touchStartX = null;
 let touchStartY = null;
+let mergedPositions = [];
 
 // Initialize when document is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -139,13 +140,17 @@ function addNewTile() {
         const {i, j} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
         grid[i][j] = Math.random() < 0.9 ? 2 : 4;
         
-        // Add animation class to new tile
-        const tiles = document.querySelectorAll('.tile');
-        const newTile = tiles[i * 4 + j];
-        newTile.classList.add('new-tile');
+        // Update grid first
+        updateGrid();
+        
+        // Then add the new-tile animation
         setTimeout(() => {
-            newTile.classList.remove('new-tile');
-        }, 300);
+            const tiles = document.querySelectorAll('.tile');
+            const newTile = tiles[i * 4 + j];
+            if (newTile && grid[i][j] !== 0) {
+                newTile.classList.add('new-tile');
+            }
+        }, 50);
     }
 }
 
@@ -156,6 +161,9 @@ function updateGrid() {
             const value = grid[i][j];
             const tile = tiles[i * 4 + j];
             const span = tile.querySelector('span');
+            
+            // Clear any existing animations
+            tile.classList.remove('merge-animation', 'new-tile');
             
             if (value === 0) {
                 span.textContent = '';
@@ -170,19 +178,25 @@ function updateGrid() {
 
 function moveTiles(direction) {
     let moved = false;
+    mergedPositions = []; // Reset merged positions
     const oldGrid = grid.map(row => [...row]);
     
     // Helper function to move and merge tiles in a row
-    function moveRow(row) {
+    function moveRow(row, rowIndex) {
         // Remove zeros and create new array
         let newRow = row.filter(cell => cell !== 0);
+        let mergedInThisRow = new Set();
+        let mergeInfo = [];
         
         // Merge adjacent equal numbers
         for (let i = 0; i < newRow.length - 1; i++) {
-            if (newRow[i] === newRow[i + 1]) {
-                newRow[i] *= 2;
-                score += newRow[i];
+            if (newRow[i] === newRow[i + 1] && !mergedInThisRow.has(i)) {
+                const mergedValue = newRow[i] * 2;
+                newRow[i] = mergedValue;
+                score += mergedValue;
                 scoreDisplay.textContent = score;
+                mergedInThisRow.add(i);
+                mergeInfo.push({pos: i, value: mergedValue});
                 newRow.splice(i + 1, 1);
             }
         }
@@ -192,47 +206,107 @@ function moveTiles(direction) {
             newRow.push(0);
         }
         
-        return newRow;
+        return { newRow, mergeInfo };
     }
     
     // Process grid based on direction
     if (direction === 'left' || direction === 'right') {
         for (let i = 0; i < 4; i++) {
-            let row = grid[i];
-            if (direction === 'right') row = [...row].reverse();
+            let row = [...grid[i]];
+            let originalRow = [...row];
+            if (direction === 'right') row.reverse();
             
-            let newRow = moveRow([...row]);
-            if (direction === 'right') newRow.reverse();
+            let { newRow, mergeInfo } = moveRow(row, i);
             
-            if (!moved && !arraysEqual(grid[i], newRow)) {
-                moved = true;
+            if (direction === 'right') {
+                newRow.reverse();
+                // Adjust merge positions for right direction
+                mergeInfo = mergeInfo.map(info => ({
+                    pos: 3 - info.pos,
+                    value: info.value
+                }));
             }
+            
+            // Check if anything moved or merged
+            if (!arraysEqual(originalRow, newRow)) {
+                moved = true;
+                // Record merged positions
+                mergeInfo.forEach(({pos, value}) => {
+                    mergedPositions.push({
+                        row: i,
+                        col: pos,
+                        value: value
+                    });
+                });
+            }
+            
             grid[i] = newRow;
         }
     } else {
         for (let j = 0; j < 4; j++) {
             let column = grid.map(row => row[j]);
-            if (direction === 'down') column = column.reverse();
+            let originalColumn = [...column];
+            if (direction === 'down') column.reverse();
             
-            let newColumn = moveRow([...column]);
-            if (direction === 'down') newColumn.reverse();
+            let { newRow: newColumn, mergeInfo } = moveRow(column, j);
             
-            if (!moved && !arraysEqual(grid.map(row => row[j]), newColumn)) {
-                moved = true;
+            if (direction === 'down') {
+                newColumn.reverse();
+                // Adjust merge positions for down direction
+                mergeInfo = mergeInfo.map(info => ({
+                    pos: 3 - info.pos,
+                    value: info.value
+                }));
             }
+            
+            // Check if anything moved or merged
+            if (!arraysEqual(originalColumn, newColumn)) {
+                moved = true;
+                // Record merged positions
+                mergeInfo.forEach(({pos, value}) => {
+                    mergedPositions.push({
+                        row: pos,
+                        col: j,
+                        value: value
+                    });
+                });
+            }
+            
             for (let i = 0; i < 4; i++) {
                 grid[i][j] = newColumn[i];
             }
         }
     }
     
+    // Update the grid first
+    updateGrid();
+    
+    // Apply merge animations with a delay
     if (moved) {
-        addNewTile();
-        updateGrid();
-        
-        if (!canMove()) {
-            showGameOverDialog();
-        }
+        setTimeout(() => {
+            const tiles = document.querySelectorAll('.tile');
+            mergedPositions.forEach(({row, col, value}) => {
+                const tileIndex = row * 4 + col;
+                const tile = tiles[tileIndex];
+                const tileValue = grid[row][col];
+                if (tile && tileValue === value && tileValue !== 0) {
+                    tile.classList.add('merge-animation');
+                    setTimeout(() => {
+                        tile.classList.remove('merge-animation');
+                    }, 300);
+                }
+            });
+            
+            // Add new tile after merge animations
+            setTimeout(() => {
+                addNewTile();
+                saveBestScore();
+                
+                if (!canMove()) {
+                    showGameOverDialog();
+                }
+            }, 350);
+        }, 50);
     }
 }
 

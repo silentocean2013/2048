@@ -266,19 +266,39 @@ body {
     font-size: 35px;
 }
 
-.tile.new-tile {
+.tile.new-tile:not(.tile:empty) {
     animation: appear 0.2s ease-in-out;
+}
+
+.tile.merge-animation:not(.tile:empty) {
+    animation: merge 0.3s ease-in-out;
+    z-index: 1;
 }
 
 @keyframes appear {
     0% {
         transform: scale(0);
-    }
-    50% {
-        transform: scale(1.2);
+        opacity: 0;
     }
     100% {
         transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes merge {
+    0% {
+        transform: scale(1);
+        filter: brightness(100%);
+    }
+    50% {
+        transform: scale(1.2);
+        filter: brightness(120%);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(100%);
     }
 }
 
